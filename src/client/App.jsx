@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDom from 'react-dom';
-import Sequence from './components/Sequence.jsx'
+import Sequence from './components/Sequence.jsx';
+import Tempo from './components/Tempo.jsx';
 
 class App extends React.Component {
   constructor() {
@@ -22,6 +23,7 @@ class App extends React.Component {
     this.playMetronome = this.playMetronome.bind(this);
     this.scheduler = this.scheduler.bind(this);
     this.nextNote = this.nextNote.bind(this);
+    this.setTempo = this.setTempo.bind(this);
     // this.startSequencer = this.startSequencer.bind(this);
     // this.updateSequence = this.updateSequence.bind(this);
     // this.scheduleEvent = this.scheduleEvent.bind(this);
@@ -85,6 +87,10 @@ class App extends React.Component {
     this.state.nextNoteTime = this.state.nextNoteTime + secondsPerBeat;
   }
 
+  setTempo(newTempo) {
+    this.state.tempo = newTempo;
+  }
+
   playGroove() {
     let startTime = this.state.context.currentTime
     for (let bar = 0; bar < 2; bar++) {
@@ -131,6 +137,7 @@ class App extends React.Component {
             Start Metronome
           </button>
         </div>
+        <Tempo setTempo={this.setTempo}/>
       </div>
     )
   }
