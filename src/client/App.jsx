@@ -8,14 +8,23 @@ class App extends React.Component {
     this.state = {
       initialized: false,
       sequence: [true, true, true, true],
-      context: null
+      context: null,
+      scheduleAheadTime: 0.1,
+      tempo: 60,
+      nextNoteTime: 0
     };
-    // this.startSequencer = this.startSequencer.bind(this);
-    // this.updateSequence = this.updateSequence.bind(this);
     this.playSound = this.playSound.bind(this);
     this.initializeAudio = this.initializeAudio.bind(this);
     this.loadSound = this.loadSound.bind(this);
     this.playGroove = this.playGroove.bind(this);
+    this.nextNote = this.nextNote.bind(this);
+
+    this.playMetronome = this.playMetronome.bind(this);
+    this.scheduler = this.scheduler.bind(this);
+    this.nextNote = this.nextNote.bind(this);
+    // this.startSequencer = this.startSequencer.bind(this);
+    // this.updateSequence = this.updateSequence.bind(this);
+    // this.scheduleEvent = this.scheduleEvent.bind(this);
   }
 
   initializeAudio() {
@@ -54,31 +63,42 @@ class App extends React.Component {
     source.start(time);
   }
 
+  // this will be triggered on a click event
+  playMetronome() {
+    // set the next note time to be the current audio context time
+    this.state.nextNoteTime = this.state.context.currentTime;
+    this.scheduler();
+  }
+
+  scheduler() {
+    while (this.state.nextNoteTime < this.state.context.currentTime + this.state.scheduleAheadTime ) {
+        this.playSound(this.state.kick, this.state.nextNoteTime);
+        this.nextNote();
+    }
+    setTimeout(() => {
+      this.scheduler();
+    }, 25);
+  }
+
+  nextNote() {
+    let secondsPerBeat = 60.0 / this.state.tempo;
+    this.state.nextNoteTime = this.state.nextNoteTime + secondsPerBeat;
+  }
+
   playGroove() {
     let startTime = this.state.context.currentTime
-
     for (let bar = 0; bar < 2; bar++) {
       let quarterNotes = bar * 4;
       this.playSound(this.state.kick, startTime + quarterNotes);
       this.playSound(this.state.snare, startTime + quarterNotes + 1);
       this.playSound(this.state.kick, startTime + quarterNotes + 2);
+      this.playSound(this.state.kick, startTime + quarterNotes + 2.5);
       this.playSound(this.state.snare, startTime + quarterNotes + 3);
-      console.log('bar number: ', bar);
 
       for (let eightNotes = 0; eightNotes < 4; eightNotes = eightNotes + .5) {
         this.playSound(this.state.hihat, startTime + quarterNotes + eightNotes);
       }
-      // this.playSound(this.state.hihat, startTime + quarterNotes + 0);
-      // this.playSound(this.state.hihat, startTime + quarterNotes + .5);
-      // this.playSound(this.state.hihat, startTime + quarterNotes + 1);
-      // this.playSound(this.state.hihat, startTime + quarterNotes + 1.5);
-      // this.playSound(this.state.hihat, startTime + quarterNotes + 2);
-      // this.playSound(this.state.hihat, startTime + quarterNotes + 2.5);
-      // this.playSound(this.state.hihat, startTime + quarterNotes + 3);
-      // this.playSound(this.state.hihat, startTime + quarterNotes + 3.5);
-
     }
-
   }
 
   render() {
@@ -106,6 +126,9 @@ class App extends React.Component {
           </button>
           <button onClick={this.playGroove}>
             Play Groove
+          </button>
+          <button onClick={this.playMetronome}>
+            Start Metronome
           </button>
         </div>
       </div>
@@ -150,4 +173,36 @@ ReactDom.render(<App />, document.getElementById('App'));
 //   const url = `http://localhost:8080/drumset/${instrument}.wav`;
 //   const sample = new Audio(url);
 //   sample.play();
+// }
+
+// FIRST ATTEMPT
+// scheduleNote(time) {
+//   this.playSound(this.state.kick, time);
+// }
+
+// scheduleEvent(e, lastScheduledEventTime = 0, nextEventTime, tempo = 60) {
+//   // calculate the time between each even at the passed in tempo
+//   let secondsBetweenBeats = 60 / tempo;
+//   console.log(secondsBetweenBeats);
+//   let scheduleAheadTime = .100;
+//   let timeOut = .025;
+//   if (!nextEventTime) {
+//     nextEventTime = lastScheduledEventTime + secondsBetweenBeats;
+//     console.log(nextEventTime);
+//   }
+//   // while the time of the last scheduled event plus the nextEvent to schedule Time is less than the last event plus the timeout
+//   while (lastScheduledEventTime + scheduleAheadTime < lastScheduledEventTime + timeOut) {
+//     // schedule the next event
+//     playSound(this.state.kick, nextEventTime);
+//     // lastScheduledEventTime = nextEventTime;
+//     lastScheduledEventTime = nextEventTime;
+//     // add secondsBetweenBeats to the value of nextEventTime
+//     nextEventTime += secondsBetweenBeats;
+//   }
+//   // set a timeout to schedule the next event
+//   setTimeout(() => {
+//     console.log('settimeout called');
+//     console.log('next event time:', nextEventTime);
+//     this.scheduleEvent(null, lastScheduledEventTime, nextEventTime, tempo);
+//   }, timeOut);
 // }
