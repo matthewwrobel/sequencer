@@ -4,7 +4,7 @@ class Tempo extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      value: ''
+      value: '60'
     };
     this.handleChange = this.handleChange.bind(this);
   }
