@@ -6,8 +6,8 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {
+      initialized: false,
       sequence: [true, true, true, true],
-      kickBuffer: null,
       context: null
     };
     this.startSequencer = this.startSequencer.bind(this);
@@ -19,12 +19,12 @@ class App extends React.Component {
 
   initializeAudio() {
     this.state.context = new AudioContext();
-
-
     this.loadSound(`http://localhost:8080/drumset/kick.wav`, 'kick');
     this.loadSound(`http://localhost:8080/drumset/snare.wav`, 'snare');
     this.loadSound(`http://localhost:8080/drumset/hihat.wav`, 'hihat');
-
+    this.setState({
+      initialized: true
+    });
   }
 
   loadSound(url, name) {
@@ -88,15 +88,21 @@ class App extends React.Component {
   }
 
   render() {
+    if (!this.state.initialized) {
+      return (
+        <div>
+          <button onClick={this.initializeAudio}>
+            Initialize!
+          </button>
+        </div>
+      );
+    }
     return (
       <div>
         <div onClick={this.startSequencer}>
           Hello Sequencer!
         </div>
         <div>
-          <button onClick={this.initializeAudio}>
-            Initialize!
-          </button>
           <button onClick={() => this.playSound(this.state.kick)}>
             Web Audio API kick
           </button>
@@ -105,15 +111,6 @@ class App extends React.Component {
           </button>
           <button onClick={() => this.playSound(this.state.hihat)}>
             Web Audio API hihat
-          </button>
-          <button onClick={this.playSample}>
-            kick
-          </button>
-          <button onClick={this.playSample}>
-            hihat
-          </button>
-          <button onClick={this.playSample}>
-            snare
           </button>
         </div>
         <div>
