@@ -10,8 +10,8 @@ class App extends React.Component {
       sequence: [true, true, true, true],
       context: null
     };
-    this.startSequencer = this.startSequencer.bind(this);
-    this.updateSequence = this.updateSequence.bind(this);
+    // this.startSequencer = this.startSequencer.bind(this);
+    // this.updateSequence = this.updateSequence.bind(this);
     this.playSound = this.playSound.bind(this);
     this.initializeAudio = this.initializeAudio.bind(this);
     this.loadSound = this.loadSound.bind(this);
@@ -28,14 +28,11 @@ class App extends React.Component {
   }
 
   loadSound(url, name) {
-
     const context = this.state.context;
     const request = new XMLHttpRequest();
     request.open('GET', url, true);
     request.responseType = 'arraybuffer';
-
-    // this is async
-    request.onload = () => {
+    request.onload = () => { // this is async
       context.decodeAudioData(request.response, (buffer) => {
         this.state[name] = buffer;
       }, () => console.log('error!'));
@@ -51,42 +48,6 @@ class App extends React.Component {
     source.start();
   }
 
-  startSequencer(e, step = 0) {
-    const sample = new Audio(`http://localhost:8080/drumset/kick.wav`);
-
-    if (step === this.state.sequence.length - 1) {
-      if (this.state.sequence[step]) {
-        sample.play();
-      }
-      setTimeout(() => {
-        this.startSequencer();
-      }, 500)
-
-    } else {
-
-      if (this.state.sequence[step]) {
-        sample.play();
-      }
-
-      setTimeout(() => {
-        this.startSequencer(null, step + 1);
-      }, 500);
-
-    }
-  }
-
-  updateSequence(beat, value) {
-    this.state.sequence[beat] = value;
-    console.log(this.state.sequence);
-  }
-
-  playSample(e) {
-    const instrument = e.target.innerHTML
-    const url = `http://localhost:8080/drumset/${instrument}.wav`;
-    const sample = new Audio(url);
-    sample.play();
-  }
-
   render() {
     if (!this.state.initialized) {
       return (
@@ -99,9 +60,9 @@ class App extends React.Component {
     }
     return (
       <div>
-        <div onClick={this.startSequencer}>
+        {/* <div onClick={this.startSequencer}>
           Hello Sequencer!
-        </div>
+        </div> */}
         <div>
           <button onClick={() => this.playSound(this.state.kick)}>
             Web Audio API kick
@@ -113,12 +74,49 @@ class App extends React.Component {
             Web Audio API hihat
           </button>
         </div>
-        <div>
+        {/* <div>
           <Sequence sequence={this.state.sequence} updateSequence={this.updateSequence}/>
-        </div>
+        </div> */}
       </div>
     )
   }
 }
 
 ReactDom.render(<App />, document.getElementById('App'));
+
+// // REMAINING METHODDS TO BE REFACTORED TO USE WEB AUDIO API
+// startSequencer(e, step = 0) {
+//   const sample = new Audio(`http://localhost:8080/drumset/kick.wav`);
+
+//   if (step === this.state.sequence.length - 1) {
+//     if (this.state.sequence[step]) {
+//       sample.play();
+//     }
+//     setTimeout(() => {
+//       this.startSequencer();
+//     }, 500)
+
+//   } else {
+
+//     if (this.state.sequence[step]) {
+//       sample.play();
+//     }
+
+//     setTimeout(() => {
+//       this.startSequencer(null, step + 1);
+//     }, 500);
+
+//   }
+// }
+
+// updateSequence(beat, value) {
+//   this.state.sequence[beat] = value;
+//   console.log(this.state.sequence);
+// }
+
+// playSample(e) {
+//   const instrument = e.target.innerHTML
+//   const url = `http://localhost:8080/drumset/${instrument}.wav`;
+//   const sample = new Audio(url);
+//   sample.play();
+// }
