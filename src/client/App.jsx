@@ -151,6 +151,7 @@ class App extends React.Component {
           </button>
         </div>
         <Tempo setTempo={this.setTempo}/>
+        <Sequence sequence={this.state.sequence}/>
       </div>
     )
   }

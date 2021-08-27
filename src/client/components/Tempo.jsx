@@ -15,16 +15,18 @@ class Tempo extends React.Component {
 
   render() {
     return (
-      <form onSubmit={(e) => {
-        e.preventDefault();
-        this.props.setTempo(Number(this.state.value));
-      }}>
-        <label>
-          Tempo:
-          <input type="text" value={this.state.value} onChange={this.handleChange} />
-        </label>
-        <input type="submit" value="Set Tempo"/>
-      </form>
+      <div>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          this.props.setTempo(Number(this.state.value));
+        }}>
+          <label>
+            Tempo:
+            <input type="text" value={this.state.value} onChange={this.handleChange} />
+          </label>
+          <input type="submit" value="Set Tempo"/>
+        </form>
+      </div>
     );
   }
 }
