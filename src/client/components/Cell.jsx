@@ -4,25 +4,35 @@ class Cell extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      instrument: null,
       value: null
     };
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  componentDidMount() {
+    this.setState({
+      value: this.props.value
+    })
+  }
+
+  handleClick() {
+    this.props.toggleSound(this.props.stepNumber, this.instrument);
+    this.setState({
+      value: !this.state.value
+    });
   }
 
   render() {
     const instrumentIndexes = {
-      '0': 'kick',
+      '2': 'kick',
       '1': 'snare',
-      '2': 'hihat'
+      '0': 'hihat'
     };
-
-    let instrument = instrumentIndexes[this.props.instrument];
-
+    this.instrument = instrumentIndexes[this.props.instrument];
     return (
-      <div className={`${instrument}`}>
-        {`${this.props.value}`}
+      <div className={`${this.instrument}`} onClick={this.handleClick}>
+        {`${this.state.value}`}
       </div>
-
     );
   }
 }

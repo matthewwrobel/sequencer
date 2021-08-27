@@ -7,7 +7,7 @@ const Sequence = (props) => (
   <div className="sequence">
     {props.sequence.map((step, i) => (
       // <Beat updateSequence={props.updateSequence} key={i} beatNumber={i} beat={beat}/>
-      <Step key={i} instruments={step} stepNumber={i}/>
+      <Step key={i} instruments={step} stepNumber={i} toggleSound={props.toggleSound}/>
     ))}
   </div>
 

@@ -12,23 +12,12 @@ const Step = (props) => {
   return (
     <div className={`step ${props.stepNumber}`}>
       {instruments.map((value, i) => (
-        <Cell key={i} value={value} instrument={i}/>
+        <Cell key={i} value={value} instrument={i} stepNumber={props.stepNumber} toggleSound={props.toggleSound}/>
       ))}
       <div>
         {`Beat ${props.stepNumber + 1}`}
       </div>
     </div>
-  // <div className={`step ${props.stepNumber}`}>
-  //   <div className="hihat">
-  //     {`${props.instruments.hihat}`}
-  //   </div>
-  //   <div className="snare">
-  //     {`${props.instruments.snare}`}
-  //   </div>
-  //   <div className="kick">
-  //     {`${props.instruments.kick}`}
-  //   </div>
-  // </div>
   );
 
 }
