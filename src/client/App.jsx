@@ -2,17 +2,19 @@ import React from 'react';
 import ReactDom from 'react-dom';
 import Sequence from './components/Sequence.jsx';
 import Tempo from './components/Tempo.jsx';
+import generateDefaultSequence from './helpers.js';
 
 class App extends React.Component {
   constructor() {
     super();
     this.state = {
       initialized: false,
-      sequence: [true, true, true, true],
+      sequence: generateDefaultSequence(),
       context: null,
       scheduleAheadTime: 0.1,
       tempo: 60,
-      nextNoteTime: 0
+      nextNoteTime: 0, // constanty updated to the time position of the next step (1/16th note)
+      step: 0
     };
     this.playSound = this.playSound.bind(this);
     this.initializeAudio = this.initializeAudio.bind(this);
@@ -74,8 +76,14 @@ class App extends React.Component {
 
   scheduler() {
     while (this.state.nextNoteTime < this.state.context.currentTime + this.state.scheduleAheadTime ) {
-        this.playSound(this.state.kick, this.state.nextNoteTime);
-        this.nextNote();
+      // iterate over the sequence here and invoke playSound when true is found
+      for (let instrument in this.state.sequence[this.state.step]) {
+        if (this.state.sequence[this.state.step][instrument]) {
+          this.playSound(this.state[instrument], this.state.nextNoteTime);
+        }
+      }
+      // this.playSound(this.state.kick, this.state.nextNoteTime); removed hard-coded kick
+      this.nextNote();
     }
     setTimeout(() => {
       this.scheduler();
@@ -84,7 +92,11 @@ class App extends React.Component {
 
   nextNote() {
     let secondsPerBeat = 60.0 / this.state.tempo;
-    this.state.nextNoteTime = this.state.nextNoteTime + secondsPerBeat;
+    // steps === 1/16th notes
+    let intervalBetweenSteps = secondsPerBeat * .25;
+    this.state.nextNoteTime = this.state.nextNoteTime + intervalBetweenSteps;
+    this.state.step = this.state.step === 15 ? 0 : this.state.step + 1;
+    console.log(this.state.step);
   }
 
   setTempo(newTempo) {
@@ -108,6 +120,7 @@ class App extends React.Component {
   }
 
   render() {
+    // console.log(this.state.sequence);
     if (!this.state.initialized) {
       return (
         <div>
