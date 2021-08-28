@@ -130,13 +130,13 @@ class App extends React.Component {
       <div>
         <div>
           <button onClick={() => this.playSound(this.state.kick)}>
-            Web Audio API kick
+            kick
           </button>
           <button onClick={() => this.playSound(this.state.snare)}>
-            Web Audio API snare
+            snare
           </button>
           <button onClick={() => this.playSound(this.state.hihat)}>
-            Web Audio API hihat
+            hihat
           </button>
           {/* <button onClick={this.playGroove}>
             Play Groove

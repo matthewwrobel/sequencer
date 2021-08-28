@@ -15,7 +15,7 @@ const Step = (props) => {
         <Cell key={i} value={value} instrument={i} stepNumber={props.stepNumber} toggleSound={props.toggleSound}/>
       ))}
       <div>
-        {`Beat ${props.stepNumber + 1}`}
+        {props.stepNumber + 1}
       </div>
     </div>
   );
