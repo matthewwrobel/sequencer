@@ -16,6 +16,9 @@ class App extends React.Component {
       nextNoteTime: 0, // constanty updated to the time position of the next step (1/16th note)
       step: 0
     };
+    this.stepQueue = [];
+    this.lastStepDrawn = -1;
+
     this.playSound = this.playSound.bind(this);
     this.initializeAudio = this.initializeAudio.bind(this);
     this.loadSound = this.loadSound.bind(this);
@@ -27,6 +30,8 @@ class App extends React.Component {
     this.scheduler = this.scheduler.bind(this);
     this.nextNote = this.nextNote.bind(this);
     this.setTempo = this.setTempo.bind(this);
+
+    this.draw = this.draw.bind(this);
   }
 
   initializeAudio() {
@@ -68,6 +73,7 @@ class App extends React.Component {
   playMetronome() {  // this will be triggered on a click event
     this.state.nextNoteTime = this.state.context.currentTime; // set the next note time to be the current audio context time
     this.scheduler();
+    requestAnimationFrame(this.draw);
   }
 
   scheduler() {
@@ -77,6 +83,9 @@ class App extends React.Component {
           this.playSound(this.state[instrument], this.state.nextNoteTime);
         }
       }
+      // push the current step number and the next step time into the step queue
+      this.stepQueue.push({step: this.state.step, time: this.state.nextNoteTime});
+      // console.log(this.stepQueue);
       this.nextNote();
     }
     setTimeout(() => {
@@ -89,6 +98,25 @@ class App extends React.Component {
     let intervalBetweenSteps = secondsPerBeat * .25; // steps === 1/16th notes
     this.state.nextNoteTime = this.state.nextNoteTime + intervalBetweenSteps;
     this.state.step = this.state.step === 15 ? 0 : this.state.step + 1;
+  }
+
+  draw() {
+    let currentStep = this.lastStepDrawn;
+    let currentTime = this.state.context.currentTime;
+
+    while(this.stepQueue.length && this.stepQueue[0].time < currentTime) {
+      currentStep = this.stepQueue[0].step;
+      this.stepQueue.splice(0, 1);
+    }
+
+    if (this.lastStepDrawn !== currentStep) {
+      let stepToHighlight = document.getElementsByClassName(`step ${currentStep}`)[0];
+      let stepToRevert = document.getElementsByClassName(`step ${currentStep - 1 === - 1 ? 15 : currentStep - 1}`)[0];
+      stepToRevert.style.backgroundColor = 'transparent';
+      stepToHighlight.style.backgroundColor = 'yellow';
+    }
+    this.lastStepDrawn = currentStep;
+    requestAnimationFrame(this.draw);
   }
 
   setTempo(newTempo) {
