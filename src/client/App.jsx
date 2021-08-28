@@ -1,41 +1,50 @@
 import React from 'react';
 import ReactDom from 'react-dom';
-import Sequence from './components/Sequence.jsx'
+import Sequence from './components/Sequence.jsx';
+import Tempo from './components/Tempo.jsx';
+import generateDefaultSequence from './helpers.js';
 
 class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      sequence: [true, true, true, true],
-      kickBuffer: null,
-      context: null
+      initialized: false,
+      sequence: generateDefaultSequence(),
+      context: null,
+      scheduleAheadTime: 0.1,
+      tempo: 60,
+      nextNoteTime: 0, // constanty updated to the time position of the next step (1/16th note)
+      step: 0
     };
-    this.startSequencer = this.startSequencer.bind(this);
-    this.updateSequence = this.updateSequence.bind(this);
     this.playSound = this.playSound.bind(this);
     this.initializeAudio = this.initializeAudio.bind(this);
     this.loadSound = this.loadSound.bind(this);
+    this.playGroove = this.playGroove.bind(this);
+    this.nextNote = this.nextNote.bind(this);
+    this.toggleSound = this.toggleSound.bind(this);
+
+    this.playMetronome = this.playMetronome.bind(this);
+    this.scheduler = this.scheduler.bind(this);
+    this.nextNote = this.nextNote.bind(this);
+    this.setTempo = this.setTempo.bind(this);
   }
 
   initializeAudio() {
     this.state.context = new AudioContext();
-
-
     this.loadSound(`http://localhost:8080/drumset/kick.wav`, 'kick');
     this.loadSound(`http://localhost:8080/drumset/snare.wav`, 'snare');
     this.loadSound(`http://localhost:8080/drumset/hihat.wav`, 'hihat');
-
+    this.setState({
+      initialized: true
+    });
   }
 
   loadSound(url, name) {
-
     const context = this.state.context;
     const request = new XMLHttpRequest();
     request.open('GET', url, true);
     request.responseType = 'arraybuffer';
-
-    // this is async
-    request.onload = () => {
+    request.onload = () => { // this is async
       context.decodeAudioData(request.response, (buffer) => {
         this.state[name] = buffer;
       }, () => console.log('error!'));
@@ -43,82 +52,101 @@ class App extends React.Component {
     request.send();
   }
 
-  playSound(buffer) {
+  playSound(buffer, time) {
     const context = this.state.context;
     const source = context.createBufferSource();
     source.buffer = buffer;
-    source.connect(context.destination);
-    source.start();
+    const gainNode = context.createGain();  // gainNode is hard-coded to hi-hat for now...
+    source.connect(gainNode);
+    gainNode.connect(context.destination);
+    if (buffer === this.state.hihat) {
+      gainNode.gain.value = 0.25;
+    }
+    source.start(time);
   }
 
-  startSequencer(e, step = 0) {
-    const sample = new Audio(`http://localhost:8080/drumset/kick.wav`);
+  playMetronome() {  // this will be triggered on a click event
+    this.state.nextNoteTime = this.state.context.currentTime; // set the next note time to be the current audio context time
+    this.scheduler();
+  }
 
-    if (step === this.state.sequence.length - 1) {
-      if (this.state.sequence[step]) {
-        sample.play();
+  scheduler() {
+    while (this.state.nextNoteTime < this.state.context.currentTime + this.state.scheduleAheadTime ) {
+      for (let instrument in this.state.sequence[this.state.step]) {
+        if (this.state.sequence[this.state.step][instrument]) {
+          this.playSound(this.state[instrument], this.state.nextNoteTime);
+        }
       }
-      setTimeout(() => {
-        this.startSequencer();
-      }, 500)
+      this.nextNote();
+    }
+    setTimeout(() => {
+      this.scheduler();
+    }, 25);
+  }
 
-    } else {
+  nextNote() {
+    let secondsPerBeat = 60.0 / this.state.tempo;
+    let intervalBetweenSteps = secondsPerBeat * .25; // steps === 1/16th notes
+    this.state.nextNoteTime = this.state.nextNoteTime + intervalBetweenSteps;
+    this.state.step = this.state.step === 15 ? 0 : this.state.step + 1;
+  }
 
-      if (this.state.sequence[step]) {
-        sample.play();
+  setTempo(newTempo) {
+    this.state.tempo = newTempo;
+  }
+
+  playGroove() {
+    let startTime = this.state.context.currentTime
+    for (let bar = 0; bar < 2; bar++) {
+      let quarterNotes = bar * 4;
+      this.playSound(this.state.kick, startTime + quarterNotes);
+      this.playSound(this.state.snare, startTime + quarterNotes + 1);
+      this.playSound(this.state.kick, startTime + quarterNotes + 2);
+      this.playSound(this.state.kick, startTime + quarterNotes + 2.5);
+      this.playSound(this.state.snare, startTime + quarterNotes + 3);
+
+      for (let eightNotes = 0; eightNotes < 4; eightNotes = eightNotes + .5) {
+        this.playSound(this.state.hihat, startTime + quarterNotes + eightNotes);
       }
-
-      setTimeout(() => {
-        this.startSequencer(null, step + 1);
-      }, 500);
-
     }
   }
 
-  updateSequence(beat, value) {
-    this.state.sequence[beat] = value;
-    console.log(this.state.sequence);
-  }
-
-  playSample(e) {
-    const instrument = e.target.innerHTML
-    const url = `http://localhost:8080/drumset/${instrument}.wav`;
-    const sample = new Audio(url);
-    sample.play();
+  toggleSound(step, instrument) {
+    this.state.sequence[step][instrument] = !this.state.sequence[step][instrument];
   }
 
   render() {
-    return (
-      <div>
-        <div onClick={this.startSequencer}>
-          Hello Sequencer!
-        </div>
+    if (!this.state.initialized) {
+      return (
         <div>
           <button onClick={this.initializeAudio}>
             Initialize!
           </button>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <div>
           <button onClick={() => this.playSound(this.state.kick)}>
-            Web Audio API kick
-          </button>
-          <button onClick={() => this.playSound(this.state.snare)}>
-            Web Audio API snare
-          </button>
-          <button onClick={() => this.playSound(this.state.hihat)}>
-            Web Audio API hihat
-          </button>
-          <button onClick={this.playSample}>
             kick
           </button>
-          <button onClick={this.playSample}>
-            hihat
-          </button>
-          <button onClick={this.playSample}>
+          <button onClick={() => this.playSound(this.state.snare)}>
             snare
           </button>
+          <button onClick={() => this.playSound(this.state.hihat)}>
+            hihat
+          </button>
+          {/* <button onClick={this.playGroove}>
+            Play Groove
+          </button> */}
+          <button onClick={this.playMetronome}>
+            Start Sequence
+          </button>
         </div>
-        <div>
-          <Sequence sequence={this.state.sequence} updateSequence={this.updateSequence}/>
-        </div>
+        <Tempo setTempo={this.setTempo}/>
+        <Sequence sequence={this.state.sequence} toggleSound={this.toggleSound}/>
       </div>
     )
   }
